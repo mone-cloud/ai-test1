@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ✅ 외부 이미지(씨네21 등) 엑스박스 방지를 위한 리퍼러 설정 (매우 중요) -->
+    <meta name="referrer" content="no-referrer">
+    
+    <title>영화 정보 게시판</title>
+    
+    <!-- Tailwind CSS CDN 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen py-10 px-4 md:px-8">
+
+    <header class="max-w-6xl mx-auto mb-10">
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-white border-b border-gray-700 pb-4">
+            추천 영화 게시판
+        </h1>
+    </header>
+
+    <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        <!-- 영화 카드 시작 -->
+        <article class="bg-gray-100 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-transform hover:-translate-y-2 duration-300">
+            
+            <!-- ✅ 영화 포스터 (대괄호를 %5B, %5D로 변환하여 브라우저 오류 방지) -->
+            <img 
+                src="https://image.cine21.com/resize/cine21/poster/2026/0317/09_48_34__69b8a4e27933e%5BX280,400%5D.jpg" 
+                alt="살목지 포스터" 
+                class="w-full aspect-[2/3] object-cover"
+            >
+
+            <!-- 영화 정보 영역 -->
+            <div class="p-6 flex flex-col flex-grow">
+                <!-- 영화 제목 -->
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                    살목지, Salmokji : Whispering Water (2025)
+                </h2>
+                
+                <!-- 시놉시스 -->
+                <p class="text-gray-700 text-base leading-relaxed text-justify">
+                    어느 날, 고요한 저수지 '살목지'에서 기이한 속삭임이 들려오기 시작한다. 마을 사람들이 하나둘씩 환청에 시달리며 실종되는 가운데, 서울에서 온 다큐멘터리 PD 진아는 이 저수지에 얽힌 오래된 저주를 파헤치기 시작한다. 물밑에 가라앉은 진실이 수면 위로 떠오를수록, 그녀 역시 벗어날 수 없는 공포와 마주하게 되는데... (이 부분을 지우고 원본 시놉시스를 넣어주세요.)
+                </p>
+            </div>
+        </article>
+        <!-- 영화 카드 끝 -->
+
+    </main>
+
+</body>
+</html>
