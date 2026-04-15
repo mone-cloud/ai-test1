@@ -1,92 +1,219 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- ✅ 외부 이미지(씨네21 등) 엑스박스 방지를 위한 리퍼러 설정 (매우 중요) -->
-    <meta name="referrer" content="no-referrer">
-    
-    <title>영화 정보 게시판</title>
-    
-    <!-- Tailwind CSS CDN 로드 -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React CDN Movie App</title>
+
+  <!-- 1. React & ReactDOM CDN (Development) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  
+  <!-- 2. Babel Standalone CDN (JSX 컴파일용) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- 3. Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen py-10 px-4 md:px-8">
+<body class="bg-slate-900 text-white min-h-screen">
+  
+  <!-- React 앱이 마운트될 Root -->
+  <div id="root"></div>
 
-    <header class="max-w-6xl mx-auto mb-10">
-        <h1 class="text-3xl md:text-4xl font-bold text-center text-white border-b border-gray-700 pb-4">
-            추천 영화 게시판
-        </h1>
-    </header>
+  <!-- 4. React 로직 (Babel 사용) -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-    <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    // --- [컴포넌트] 갤러리 이미지 처리기 ---
+    // jpg -> png -> webp 순으로 로드 시도 후, 전부 실패하면 화면에서 숨김
+    function GalleryImage({ movieId, index }) {
+      const extensions = ['jpg', 'png', 'webp'];
+      const [extIndex, setExtIndex] = useState(0);
+      const [failed, setFailed] = useState(false);
 
-        <!-- 영화 카드 시작 -->
-        <article class="bg-gray-100 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-transform hover:-translate-y-2 duration-300">
-            
-            <!-- ✅ 영화 포스터 (대괄호를 %5B, %5D로 변환하여 브라우저 오류 방지) -->
-            <img 
-                src="https://image.cine21.com/resize/cine21/poster/2026/0317/09_48_34__69b8a4e27933e%5BX280,400%5D.jpg" 
-                alt="살목지 포스터" 
-                class="w-full aspect-[2/3] object-cover"
-            >
+      const handleError = () => {
+        if (extIndex < extensions.length - 1) {
+          setExtIndex(prev => prev + 1); // 다음 확장자로 재시도
+        } else {
+          setFailed(true); // 모든 확장자 실패 시 이미지 숨김 처리
+        }
+      };
 
-            <!-- 영화 정보 영역 -->
-            <div class="p-6 flex flex-col flex-grow">
-                <!-- 영화 제목 -->
-                <h2 class="text-2xl font-extrabold text-gray-900 mb-4 tracking-tight">
-                    살목지, Salmokji : Whispering Water (2025)
-                </h2>
-                
-                <!-- 시놉시스 -->
-                <p class="text-gray-700 text-base leading-relaxed text-justify">
-                    어느 날, 고요한 저수지 '살목지'에서 기이한 속삭임이 들려오기 시작한다. 마을 사람들이 하나둘씩 환청에 시달리며 실종되는 가운데, 서울에서 온 다큐멘터리 PD 진아는 이 저수지에 얽힌 오래된 저주를 파헤치기 시작한다. 물밑에 가라앉은 진실이 수면 위로 떠오를수록, 그녀 역시 벗어날 수 없는 공포와 마주하게 되는데... (이 부분을 지우고 원본 시놉시스를 넣어주세요.)
-                </p>
+      if (failed) return null;
+
+      return (
+        <div className="aspect-video bg-slate-800 rounded-lg overflow-hidden shadow-md">
+          <img
+            src={`/images/${movieId}${index}.${extensions[extIndex]}`}
+            alt={`Gallery image ${index}`}
+            className="w-full h-full object-cover transition duration-300 hover:scale-110"
+            onError={handleError}
+          />
+        </div>
+      );
+    }
+
+    // --- [컴포넌트] 영화 목록 카드 ---
+    function MovieCard({ movie, onClick }) {
+      return (
+        <div 
+          onClick={() => onClick(movie)}
+          className="bg-slate-800 rounded-2xl overflow-hidden shadow-lg cursor-pointer transform transition duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-900/50 flex flex-col"
+        >
+          {/* 대표 이미지가 없을 경우 숨김 처리 */}
+          <div className="relative aspect-[2/3] bg-slate-700">
+            <img
+              src={movie.poster || `/images/${movie.id}1.jpg`}
+              alt={movie.title}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+          <div className="p-5 flex flex-col flex-grow">
+            <h3 className="text-xl font-bold text-slate-100 mb-2">{movie.title}</h3>
+            <p className="text-slate-400 text-sm line-clamp-3 mb-4">{movie.description}</p>
+            <div className="mt-auto flex justify-between items-center">
+              <span className="bg-slate-900 text-blue-400 text-xs px-3 py-1 rounded-full font-medium">
+                {movie.genre || '미분류'}
+              </span>
             </div>
-        </article>
-        <!-- 영화 카드 끝 -->
+          </div>
+        </div>
+      );
+    }
 
-        <!-- 영화 카드 시작 -->
-        <article class="bg-gray-100 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-transform hover:-translate-y-2 duration-300">
-            
-            <!-- ✅ 영화 포스터 (대괄호를 %5B, %5D로 변환하여 브라우저 오류 방지) -->
-            <img 
-                src="https://image.cine21.com/resize/cine21/poster/2026/0204/15_31_19__6982e7b7adfbb[X280,400].jpg" 
-                alt="왕과 사는 남자 포스터" 
-                class="w-full aspect-[2/3] object-cover"
-            >
+    // --- [컴포넌트] 영화 상세 페이지 ---
+    function MovieDetail({ movie, onBack }) {
+      // 1부터 9까지의 배열 생성
+      const galleryIndices = Array.from({ length: 9 }, (_, i) => i + 1);
 
-        <!-- 영화 정보 영역 -->
-            <div class="p-6 flex flex-col flex-grow">
-                <!-- 영화 제목 -->
-                <h2 class="text-2xl font-extrabold text-gray-900 mb-4 tracking-tight">
-                    왕과 사는 남자 
-                </h2>
-                
-                <!-- 시놉시스 -->
-                <p class="text-gray-700 text-base leading-relaxed text-justify">
-                    “나는 이제 어디로 갑니까…”
+      return (
+        <div className="max-w-6xl mx-auto animate-fadeIn">
+          {/* 뒤로 가기 버튼 */}
+          <button 
+            onClick={onBack} 
+            className="group mb-8 flex items-center text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-5 py-2.5 rounded-xl transition duration-200 shadow-md font-medium"
+          >
+            <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span> 
+            목록으로 돌아가기
+          </button>
 
-                    계유정난이 조선을 뒤흔들고
-                    어린 왕 이홍위는 왕위에서 쫓겨나 유배길에 오른다.
-
-                    “무슨 수를 쓰더라도 그 대감을 우리 광천골로 오게 해야지”
-
-                    한편, 강원도 영월 산골 마을 광천골의 촌장 엄흥도는
-                    먹고 살기 힘든 마을 사람들을 위해 청령포를 유배지로 만들기 위해 노력한다.
-                    그러나 촌장이 부푼 꿈으로 맞이한 이는 왕위에서 쫓겨난 이홍위였다.
-                    유배지를 지키는 보수주인으로서 그의 모든 일상을 감시해야만 하는 촌장은
-                    삶의 의지를 잃어버린 이홍위가 점점 신경 쓰이는데…
-
-                    1457년 청령포, 역사가 지우려 했던 이야기
-<왕과 사는 남자>
-                </p>
+          {/* 영화 상단 정보 */}
+          <div className="flex flex-col md:flex-row gap-10 mb-16 bg-slate-800/50 p-8 rounded-3xl border border-slate-700/50">
+            <div className="md:w-1/3 flex-shrink-0">
+              <img
+                src={movie.poster || `/images/${movie.id}1.jpg`}
+                alt={movie.title}
+                className="w-full rounded-2xl shadow-2xl object-cover aspect-[2/3]"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
             </div>
-        </article>
-        <!-- 영화 카드 끝 -->
+            <div className="md:w-2/3 flex flex-col justify-center">
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                {movie.title}
+              </h1>
+              <div className="flex flex-wrap gap-3 mb-6">
+                <span className="bg-slate-700 px-4 py-1.5 rounded-lg text-sm font-semibold">{movie.genre}</span>
+                <span className="bg-slate-700 px-4 py-1.5 rounded-lg text-sm font-semibold">{movie.year}</span>
+              </div>
+              <p className="text-lg text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {movie.description}
+              </p>
+            </div>
+          </div>
 
-    </main>
+          {/* 갤러리 섹션 */}
+          <div>
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-blue-500 rounded-full inline-block"></span>
+              스틸컷 갤러리
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {galleryIndices.map(num => (
+                <GalleryImage key={num} movieId={movie.id} index={num} />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
+    // --- [컴포넌트] 메인 App (상태 관리 및 라우팅) ---
+    function App() {
+      const [movies, setMovies] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [selectedMovie, setSelectedMovie] = useState(null);
+
+      // 데이터 비동기 로딩
+      useEffect(() => {
+        fetch('data.json')
+          .then(res => {
+            if (!res.ok) throw new Error('데이터를 불러오지 못했습니다.');
+            return res.json();
+          })
+          .then(data => {
+            setMovies(data);
+            setLoading(false);
+          })
+          .catch(error => {
+            console.error("Fetch Error:", error);
+            setLoading(false);
+          });
+      }, []);
+
+      // 로딩 화면
+      if (loading) {
+        return (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <div className="text-xl text-blue-400 font-bold animate-pulse">로딩 중...</div>
+            </div>
+          </div>
+        );
+      }
+
+      // 조건부 렌더링 로직 (라우팅 대체)
+      return (
+        <div className="p-6 md:p-12 font-sans">
+          <header className="max-w-6xl mx-auto mb-12">
+            <h1 
+              onClick={() => setSelectedMovie(null)}
+              className="text-3xl font-black tracking-tight cursor-pointer inline-block hover:opacity-80 transition"
+            >
+              🎬 <span className="text-white">CINE</span><span className="text-blue-500">MAX</span>
+            </h1>
+          </header>
+
+          <main className="max-w-6xl mx-auto pb-20">
+            {selectedMovie ? (
+              <MovieDetail movie={selectedMovie} onBack={() => setSelectedMovie(null)} />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                {movies.map(movie => (
+                  <MovieCard key={movie.id} movie={movie} onClick={setSelectedMovie} />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    // React 18 렌더링 방식
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+
+  <!-- 간단한 커스텀 애니메이션 -->
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+  </style>
 </body>
 </html>
